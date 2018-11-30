@@ -6,6 +6,7 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.text.TextUtils
 import android.util.Log
+import com.lzb.record.play.AudioTracker
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -98,6 +99,7 @@ class AudioRecorder private constructor() {
         bufferSizeInBytes = AudioRecord.getMinBufferSize(AUDIO_SAMPLE_RETE, AUDIO_CHANNEL, AUDIO_ENCODING)
         mAudioRecord = AudioRecord(audioSource, AUDIO_SAMPLE_RETE, AUDIO_CHANNEL, AUDIO_ENCODING, bufferSizeInBytes)
         updateStatus(RecordStatus.STATE_READY)
+        AudioTracker.getInstance().prepare()
     }
 
     fun start() {
@@ -109,6 +111,7 @@ class AudioRecorder private constructor() {
         }
         mAudioRecord.startRecording()
         updateStatus(RecordStatus.STATE_RECORDING)
+        AudioTracker.getInstance().start()
         //保存到文件
         mExecutorService.execute {
             Log.e("AudioRecorder", "start record")
@@ -143,6 +146,7 @@ class AudioRecorder private constructor() {
             updateStatus(RecordStatus.STATE_STOP)
             release()
         }
+        AudioTracker.getInstance().stop()
     }
 
     private fun release() {
@@ -151,15 +155,13 @@ class AudioRecorder private constructor() {
         //结束录音后再次调用处理方法用于关闭流、添加头等操作
         handleAudioBuffer()
 
-//        pcmToWaveUtil = PcmToWaveUtil()
-//        mExecutorService.execute {
-//            val audioFile = File(recordCacheDirectory, fileName)
-//            val desFileName = fileName?.substring(0, fileName?.indexOf(".pcm")!!) + "-release.wav"
-//            val dstFile = File(recordCacheDirectory, desFileName)
-//            val changeResult = pcmToWaveUtil.pcm2wav(audioFile.absolutePath, dstFile.absolutePath, false)
-//            if (callbackListener != null)
-//                callbackListener!!.onSaveWav(changeResult, dstFile.absolutePath)
-//        }
+        pcmToWaveUtil = PcmToWaveUtil()
+        mExecutorService.execute {
+            val audioFile = File(recordCacheDirectory, fileName)
+            val desFileName = fileName?.substring(0, fileName?.indexOf(".pcm")!!) + "-release.wav"
+            val dstFile = File(recordCacheDirectory, desFileName)
+            val changeResult = pcmToWaveUtil.pcm2wav(audioFile.absolutePath, dstFile.absolutePath, false)
+        }
     }
 
     fun setSaveType(saveType: Int) {
@@ -190,6 +192,7 @@ class AudioRecorder private constructor() {
             saveBuffer2Pcm(readSize, readBuffer)
             saveBuffer2WAV(readSize, readBuffer)
             saveBuffer2AAC(readSize, readBuffer)
+            AudioTracker.getInstance().play(readBuffer)
         }
         if (currentStatus == RecordStatus.STATE_RELEASE) {
             try {
