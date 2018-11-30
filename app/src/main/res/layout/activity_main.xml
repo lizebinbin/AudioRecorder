@@ -27,4 +27,11 @@
             android:onClick="onClick"
             android:layout_height="wrap_content"
             android:text="结束录音"/>
+
+    <Button
+            android:id="@+id/changeVoice"
+            android:layout_width="wrap_content"
+            android:onClick="onClick"
+            android:layout_height="wrap_content"
+            android:text="变声"/>
 </LinearLayout>

@@ -6,11 +6,12 @@ import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.view.View
 import com.lzb.record.AudioCallbackListener
 import com.lzb.record.AudioRecorder
 import com.lzb.record.RecordStatus
+import com.lzb.record.effect.EffectManager
+import com.lzb.record.effect.EffectUtils
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(), View.OnClickListener, AudioCallbackListener {
@@ -24,6 +25,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, AudioCallbackLis
         requestPermission()
         //初始化
         AudioRecorder.getInstance().init(this, this)
+        AudioRecorder.getInstance().setSaveType(AudioRecorder.SAVE_TYPE_PCM)
+
+        EffectManager.getInstance().init(this)
+
     }
 
     private fun requestPermission() {
@@ -49,6 +54,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, AudioCallbackLis
                 }
             }
             R.id.stopRecord -> AudioRecorder.getInstance().stop()
+            R.id.changeVoice -> {
+                val path = "file:///android_asset/bin.wav"
+                EffectManager.getInstance().play(path, EffectUtils.MODE_DASHU)
+            }
         }
     }
 
@@ -58,6 +67,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, AudioCallbackLis
             RecordStatus.STATE_RECORDING -> {
                 startRecord.text = "正在录音..."
                 pauseRecord.text = "暂停录音"
+//                EffectManager.getInstance().play(filePath, EffectUtils.MODE_DASHU)
             }
             RecordStatus.STATE_PAUSE -> {
                 startRecord.text = "录音暂停..."
@@ -76,6 +86,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, AudioCallbackLis
 
     override fun onRecordData(data: ByteArray, volume: Float) {
 
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        EffectManager.getInstance().close()
     }
 
 //    override fun onSaveWav(isSaved: Boolean, filePath: String) {

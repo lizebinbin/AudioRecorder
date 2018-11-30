@@ -99,7 +99,7 @@ class AudioRecorder private constructor() {
         bufferSizeInBytes = AudioRecord.getMinBufferSize(AUDIO_SAMPLE_RETE, AUDIO_CHANNEL, AUDIO_ENCODING)
         mAudioRecord = AudioRecord(audioSource, AUDIO_SAMPLE_RETE, AUDIO_CHANNEL, AUDIO_ENCODING, bufferSizeInBytes)
         updateStatus(RecordStatus.STATE_READY)
-        AudioTracker.getInstance().prepare()
+//        AudioTracker.getInstance().prepare()
     }
 
     fun start() {
@@ -111,7 +111,7 @@ class AudioRecorder private constructor() {
         }
         mAudioRecord.startRecording()
         updateStatus(RecordStatus.STATE_RECORDING)
-        AudioTracker.getInstance().start()
+//        AudioTracker.getInstance().start()
         //保存到文件
         mExecutorService.execute {
             Log.e("AudioRecorder", "start record")
@@ -146,7 +146,7 @@ class AudioRecorder private constructor() {
             updateStatus(RecordStatus.STATE_STOP)
             release()
         }
-        AudioTracker.getInstance().stop()
+//        AudioTracker.getInstance().stop()
     }
 
     private fun release() {
@@ -192,7 +192,7 @@ class AudioRecorder private constructor() {
             saveBuffer2Pcm(readSize, readBuffer)
             saveBuffer2WAV(readSize, readBuffer)
             saveBuffer2AAC(readSize, readBuffer)
-            AudioTracker.getInstance().play(readBuffer)
+//            AudioTracker.getInstance().play(readBuffer)
         }
         if (currentStatus == RecordStatus.STATE_RELEASE) {
             try {
