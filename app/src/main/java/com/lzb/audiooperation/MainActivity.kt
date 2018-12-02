@@ -58,6 +58,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, AudioCallbackLis
                 val path = "file:///android_asset/bin.wav"
                 EffectManager.getInstance().play(path, EffectUtils.MODE_DASHU)
             }
+            R.id.stopChangeVoice -> {
+                EffectManager.getInstance().stop()
+            }
         }
     }
 

@@ -19,7 +19,9 @@ public class EffectUtils {
      * @param path
      * @param type
      */
-    public native static void fix(String path, int type);
+    public native static void fix(String path, int type, int save);
+
+    public native static void stop();
 
     static {
         System.loadLibrary("fmodL");

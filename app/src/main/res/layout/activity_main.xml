@@ -33,5 +33,12 @@
             android:layout_width="wrap_content"
             android:onClick="onClick"
             android:layout_height="wrap_content"
-            android:text="变声"/>
+            android:text="播放变声"/>
+
+    <Button
+            android:id="@+id/stopChangeVoice"
+            android:layout_width="wrap_content"
+            android:onClick="onClick"
+            android:layout_height="wrap_content"
+            android:text="停止变声"/>
 </LinearLayout>

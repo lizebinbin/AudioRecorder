@@ -42,13 +42,17 @@ class EffectManager private constructor() {
         fixedThreadPool?.execute(playerThread)
     }
 
+    fun stop() {
+        EffectUtils.stop()
+    }
+
     fun close() {
         FMOD.close()
     }
 
     inner class PlayerThread : Runnable {
         override fun run() {
-            EffectUtils.fix(path, currentType)
+            EffectUtils.fix(path, currentType, 0)
         }
     }
 }

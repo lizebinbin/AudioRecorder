@@ -27,29 +27,39 @@
 
 using namespace FMOD;
 
+System *mSystem;
+Sound *sound;
+Channel *channel;
+DSP *dsp;
+float frequency = 0;
+
+void stopPlaying();
+
 JNIEXPORT void JNICALL Java_com_lzb_record_effect_EffectUtils_fix
-        (JNIEnv *env, jclass jcls, jstring path_jstr, jint type) {
-    LOGI("%s", "fix normal55555555555");
-    System *system;
-    Sound *sound;
-    Channel *channel;
-    DSP *dsp;
-    float frequency = 0;
+        (JNIEnv *env, jclass jcls, jstring path_jstr, jint type, jint save) {
     bool playing = true;
 
     const char *path_cstr = env->GetStringUTFChars(path_jstr, NULL);
     try {
         //初始化
-        System_Create(&system);
-        //手机录音一般是16位  如果是32位的音频要填32 否则无法播放声音
-        system->init(16, FMOD_INIT_NORMAL, NULL);
+        System_Create(&mSystem);
+//        mSystem->setSoftwareFormat(8000,FMOD_SPEAKERMODE_MONO,1);
+        if (save == 1) {
+            char cDest[200] = "sdcard/test.wav";
+            mSystem->setOutput(FMOD_OUTPUTTYPE_WAVWRITER);
+            mSystem->init(16, FMOD_INIT_NORMAL | FMOD_INIT_PROFILE_ENABLE, cDest);
+        } else {
+            //手机录音一般是16位  如果是32位的音频要填32 否则无法播放声音
+            mSystem->init(16, FMOD_INIT_NORMAL, NULL);
+        }
+
         //创建声音
-        system->createSound(path_cstr, FMOD_DEFAULT, NULL, &sound);
+        mSystem->createSound(path_cstr, FMOD_DEFAULT, NULL, &sound);
         switch (type) {
             case MODE_NORMAL:
                 //原生播放
                 LOGI("%s", path_cstr);
-                system->playSound(sound, 0, false, &channel);
+                mSystem->playSound(sound, 0, false, &channel);
                 LOGI("%s", "fix normal");
                 break;
             case MODE_LUOLI:
@@ -58,10 +68,10 @@ JNIEXPORT void JNICALL Java_com_lzb_record_effect_EffectUtils_fix
                 //dsp -> 音效
                 //FMOD_DSP_TYPE_PITCH  dsp ，提升或者降低音调用的一种音效
                 // FMOD_DSP_TYPE_PITCHSHIFT 在fmod_dsp_effects.h中
-                system->createDSPByType(FMOD_DSP_TYPE_PITCHSHIFT, &dsp);
+                mSystem->createDSPByType(FMOD_DSP_TYPE_PITCHSHIFT, &dsp);
                 //设置音调的参数
                 dsp->setParameterFloat(FMOD_DSP_PITCHSHIFT_PITCH, 2.5);
-                system->playSound(sound, 0, false, &channel);
+                mSystem->playSound(sound, 0, false, &channel);
                 //添加到channel
                 channel->addDSP(0, dsp);
                 LOGI("%s", "fix luoli");
@@ -69,26 +79,25 @@ JNIEXPORT void JNICALL Java_com_lzb_record_effect_EffectUtils_fix
 
             case MODE_DASHU:
                 //大叔
-                system->createDSPByType(FMOD_DSP_TYPE_PITCHSHIFT, &dsp);
+                mSystem->createDSPByType(FMOD_DSP_TYPE_PITCHSHIFT, &dsp);
                 dsp->setParameterFloat(FMOD_DSP_PITCHSHIFT_PITCH, 0.8);
 
-                system->playSound(sound, 0, false, &channel);
+                mSystem->playSound(sound, 0, false, &channel);
                 //添加到channel
                 channel->addDSP(0, dsp);
                 LOGI("%s", "fix dashu");
                 break;
-                break;
             case MODE_JINGSONG:
                 //惊悚
-                system->createDSPByType(FMOD_DSP_TYPE_TREMOLO, &dsp);
+                mSystem->createDSPByType(FMOD_DSP_TYPE_TREMOLO, &dsp);
                 dsp->setParameterFloat(FMOD_DSP_TREMOLO_SKEW, 0.5);
-                system->playSound(sound, 0, false, &channel);
+                mSystem->playSound(sound, 0, false, &channel);
                 channel->addDSP(0, dsp);
                 break;
             case MODE_GAOGUAI:
                 //搞怪
                 //提高说话的速度
-                system->playSound(sound, 0, false, &channel);
+                mSystem->playSound(sound, 0, false, &channel);
                 channel->getFrequency(&frequency);
                 frequency = frequency * 1.6f;
                 channel->setFrequency(frequency);
@@ -96,19 +105,19 @@ JNIEXPORT void JNICALL Java_com_lzb_record_effect_EffectUtils_fix
                 break;
             case MODE_KONGLING:
                 //空灵
-                system->createDSPByType(FMOD_DSP_TYPE_ECHO, &dsp);
+                mSystem->createDSPByType(FMOD_DSP_TYPE_ECHO, &dsp);
                 dsp->setParameterFloat(FMOD_DSP_ECHO_DELAY, 300);
                 dsp->setParameterFloat(FMOD_DSP_ECHO_FEEDBACK, 20);
-                system->playSound(sound, 0, false, &channel);
+                mSystem->playSound(sound, 0, false, &channel);
                 channel->addDSP(0, dsp);
                 LOGI("%s", "fix kongling");
 
                 break;
             case MODE_HECHANG:
-                system->createDSPByType(FMOD_DSP_TYPE_CHORUS, &dsp);
+                mSystem->createDSPByType(FMOD_DSP_TYPE_CHORUS, &dsp);
                 dsp->setParameterFloat(FMOD_DSP_CHORUS_MIX, 50);
                 dsp->setParameterFloat(FMOD_DSP_CHORUS_RATE, 1.1);
-                system->playSound(sound, 0, false, &channel);
+                mSystem->playSound(sound, 0, false, &channel);
                 channel->addDSP(0, dsp);
                 break;
 
@@ -119,7 +128,7 @@ JNIEXPORT void JNICALL Java_com_lzb_record_effect_EffectUtils_fix
         LOGE("%s", "发生异常");
         goto END;
     }
-    system->update();
+    mSystem->update();
     //进程休眠 单位微秒 us
     //每秒钟判断是否在播放
     while (playing) {
@@ -131,8 +140,16 @@ JNIEXPORT void JNICALL Java_com_lzb_record_effect_EffectUtils_fix
     END:
     env->ReleaseStringUTFChars(path_jstr, path_cstr);
     sound->release();
-    system->close();
-    system->release();
+    mSystem->close();
+    mSystem->release();
 
 
+}
+
+JNIEXPORT void JNICALL Java_com_lzb_record_effect_EffectUtils_stop(JNIEnv *env, jclass jcls) {
+    stopPlaying();
+}
+
+void stopPlaying() {
+    channel->stop();
 }

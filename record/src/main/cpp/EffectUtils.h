@@ -27,8 +27,10 @@ extern "C" {
  * Signature: (Ljava/lang/String;I)V
  */
 JNIEXPORT void JNICALL Java_com_lzb_record_effect_EffectUtils_fix
-  (JNIEnv *, jclass, jstring, jint);
+        (JNIEnv *, jclass, jstring, jint, jint);
 
+JNIEXPORT void JNICALL Java_com_lzb_record_effect_EffectUtils_stop
+        (JNIEnv *, jclass);
 #ifdef __cplusplus
 }
 #endif
