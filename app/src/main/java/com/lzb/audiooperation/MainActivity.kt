@@ -9,16 +9,22 @@ import android.support.v7.app.AppCompatActivity
 import android.view.View
 import com.lzb.record.AudioCallbackListener
 import com.lzb.record.AudioRecorder
+import com.lzb.record.RecordFileUtil
 import com.lzb.record.RecordStatus
 import com.lzb.record.effect.EffectManager
 import com.lzb.record.effect.EffectUtils
+import com.lzb.record.play.AudioTracker
 import kotlinx.android.synthetic.main.activity_main.*
+import java.io.File
 
 class MainActivity : AppCompatActivity(), View.OnClickListener, AudioCallbackListener {
 
     private val permissions = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO)
     private val PERMISSION_REQUEST_CODE = 1001
     private var currentStatus = RecordStatus.STATE_RELEASE
+    private lateinit var testPCMPath: String
+    private lateinit var testDstPCMPath: String
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -29,6 +35,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, AudioCallbackLis
 
         EffectManager.getInstance().init(this)
 
+        testPCMPath = RecordFileUtil.getDefaultRecordDirectory(this).absolutePath + File.separator +
+                "20181202-180630.pcm"
+        testDstPCMPath = RecordFileUtil.getDefaultRecordDirectory(this).absolutePath + File.separator +
+                "20181202-180630-slower.pcm"
     }
 
     private fun requestPermission() {
@@ -60,6 +70,21 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, AudioCallbackLis
             }
             R.id.stopChangeVoice -> {
                 EffectManager.getInstance().stop()
+            }
+            R.id.downVolume -> {
+                EffectManager.getInstance().downVolume(testPCMPath, testDstPCMPath)
+            }
+            R.id.fasterPCM -> EffectManager.getInstance().fasterPCM(testPCMPath, testDstPCMPath)
+            R.id.slowerPCM -> EffectManager.getInstance().slowerPCM(testPCMPath, testDstPCMPath)
+            R.id.playPCM -> {
+                AudioTracker.getInstance().prepare()
+                AudioTracker.getInstance().start()
+                AudioTracker.getInstance().playPCMFile(testPCMPath)
+            }
+            R.id.playPCMChange -> {
+                AudioTracker.getInstance().prepare()
+                AudioTracker.getInstance().start()
+                AudioTracker.getInstance().playPCMFile(testDstPCMPath)
             }
         }
     }

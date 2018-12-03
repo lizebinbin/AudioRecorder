@@ -50,6 +50,18 @@ class EffectManager private constructor() {
         FMOD.close()
     }
 
+    fun downVolume(srcPath: String, dstPath: String) {
+        EffectUtils.downVolume(srcPath, dstPath)
+    }
+
+    fun fasterPCM(srcPath: String, dstPath: String) {
+        EffectUtils.fasterPCM(srcPath, dstPath)
+    }
+
+    fun slowerPCM(srcPath: String, dstPath: String) {
+        EffectUtils.slowerPCM(srcPath, dstPath)
+    }
+
     inner class PlayerThread : Runnable {
         override fun run() {
             EffectUtils.fix(path, currentType, 0)

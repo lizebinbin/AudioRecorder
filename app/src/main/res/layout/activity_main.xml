@@ -41,4 +41,36 @@
             android:onClick="onClick"
             android:layout_height="wrap_content"
             android:text="停止变声"/>
+
+    <Button
+            android:id="@+id/downVolume"
+            android:layout_width="wrap_content"
+            android:onClick="onClick"
+            android:layout_height="wrap_content"
+            android:text="测试左声道音量降一半"/>
+    <Button
+            android:id="@+id/fasterPCM"
+            android:layout_width="wrap_content"
+            android:onClick="onClick"
+            android:layout_height="wrap_content"
+            android:text="速度增加一倍"/>
+
+    <Button
+            android:id="@+id/slowerPCM"
+            android:layout_width="wrap_content"
+            android:onClick="onClick"
+            android:layout_height="wrap_content"
+            android:text="速度放慢一倍"/>
+    <Button
+            android:id="@+id/playPCM"
+            android:layout_width="wrap_content"
+            android:onClick="onClick"
+            android:layout_height="wrap_content"
+            android:text="播放PCM文件"/>
+    <Button
+            android:id="@+id/playPCMChange"
+            android:layout_width="wrap_content"
+            android:onClick="onClick"
+            android:layout_height="wrap_content"
+            android:text="播放修改后PCM文件"/>
 </LinearLayout>

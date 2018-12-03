@@ -23,6 +23,12 @@ public class EffectUtils {
 
     public native static void stop();
 
+    public native static void downVolume(String fileUrl, String dstFileUrl);
+
+    public native static void fasterPCM(String fileUrl, String dstFileUrl);
+
+    public native static void slowerPCM(String fileUrl, String dstFileUrl);
+
     static {
         System.loadLibrary("fmodL");
         System.loadLibrary("fmod");

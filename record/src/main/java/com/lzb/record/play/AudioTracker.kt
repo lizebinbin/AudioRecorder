@@ -3,6 +3,10 @@ package com.lzb.record.play
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
+import java.io.FileInputStream
+import java.io.IOException
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 /**
  * Created by lzb on 2018/11/27.
@@ -19,6 +23,8 @@ class AudioTracker {
 
     private lateinit var mAudioTrack: AudioTrack
     private var mCurrentStatus = PlayStatus.STATUS_RELEASE
+
+    private var mExecutorService: ExecutorService = Executors.newCachedThreadPool()
 
     companion object {
         private var mInstance: AudioTracker? = null
@@ -61,6 +67,28 @@ class AudioTracker {
     fun play(audioBuffer: ByteArray) {
         if (mCurrentStatus == PlayStatus.STATUS_PLAYING)
             mAudioTrack.write(audioBuffer, 0, audioBuffer.size)
+    }
+
+    fun playPCMFile(path: String) {
+        if (mCurrentStatus == PlayStatus.STATUS_PLAYING) {
+            mExecutorService.execute {
+                var fis: FileInputStream? = null
+                try {
+                    fis = FileInputStream(path)
+                    val bytes = ByteArray(1024)
+                    var readSize = fis.read(bytes)
+                    while (readSize > 0) {
+                        mAudioTrack.write(bytes, 0, readSize)
+                        readSize = fis.read(bytes)
+                    }
+                    stop()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                } finally {
+                    fis?.close()
+                }
+            }
+        }
     }
 
     private fun release() {

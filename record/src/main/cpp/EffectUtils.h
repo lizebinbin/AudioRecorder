@@ -31,6 +31,15 @@ JNIEXPORT void JNICALL Java_com_lzb_record_effect_EffectUtils_fix
 
 JNIEXPORT void JNICALL Java_com_lzb_record_effect_EffectUtils_stop
         (JNIEnv *, jclass);
+
+JNIEXPORT void JNICALL Java_com_lzb_record_effect_EffectUtils_downVolume
+        (JNIEnv *, jclass, jstring, jstring);
+
+JNIEXPORT void JNICALL Java_com_lzb_record_effect_EffectUtils_fasterPCM
+        (JNIEnv *, jclass, jstring, jstring);
+
+JNIEXPORT void JNICALL Java_com_lzb_record_effect_EffectUtils_slowerPCM
+        (JNIEnv *, jclass, jstring, jstring);
 #ifdef __cplusplus
 }
 #endif

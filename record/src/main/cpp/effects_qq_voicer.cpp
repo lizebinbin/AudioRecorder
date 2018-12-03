@@ -150,6 +150,96 @@ JNIEXPORT void JNICALL Java_com_lzb_record_effect_EffectUtils_stop(JNIEnv *env, 
     stopPlaying();
 }
 
+//将PCM16LE双声道音频采样数据中左声道的音量降一半
+JNIEXPORT void JNICALL
+Java_com_lzb_record_effect_EffectUtils_downVolume(JNIEnv *env, jclass jcls, jstring path_str, jstring dst_path) {
+    const char *fileUrl = env->GetStringUTFChars(path_str, NULL);
+    const char *dstFileUrl = env->GetStringUTFChars(dst_path, NULL);
+    FILE *fp = fopen(fileUrl, "rb+");
+    FILE *fp1 = fopen(dstFileUrl, "wb+");
+
+    int cnt = 0;
+
+    unsigned char *sample = (unsigned char *) malloc(4);
+
+    while (!feof(fp)) {
+        short *samplenum = NULL;
+        fread(sample, 1, 4, fp);
+
+        samplenum = (short *) sample;
+        *samplenum = *samplenum / 2;
+        //L
+        fwrite(sample, 1, 2, fp1);
+        //R
+        fwrite(sample + 2, 1, 2, fp1);
+
+        cnt++;
+    }
+    LOGI("Sample Cnt:%d\n", cnt);
+
+    free(sample);
+    fclose(fp);
+    fclose(fp1);
+}
+
+//将PCM16LE双声道音频采样数据的声音速度提高一倍
+JNIEXPORT void JNICALL
+Java_com_lzb_record_effect_EffectUtils_fasterPCM(JNIEnv *env, jclass jcls, jstring path_str, jstring dst_path) {
+    const char *fileUrl = env->GetStringUTFChars(path_str, NULL);
+    const char *dstFileUrl = env->GetStringUTFChars(dst_path, NULL);
+    FILE *fp = fopen(fileUrl, "rb+");
+    FILE *fp1 = fopen(dstFileUrl, "wb+");
+
+    int cnt = 0;
+
+    unsigned char *sample = (unsigned char *) malloc(4);
+
+    while (!feof(fp)) {
+        fread(sample, 1, 4, fp);
+        if (cnt % 2 != 0) {
+            //L
+            fwrite(sample, 1, 2, fp1);
+            //R
+            fwrite(sample + 2, 1, 2, fp1);
+        }
+        cnt++;
+    }
+    LOGI("Sample Cnt:%d\n", cnt);
+    free(sample);
+    fclose(fp);
+    fclose(fp1);
+}
+
+//将PCM16LE双声道音频采样数据的声音速度放慢一倍
+JNIEXPORT void JNICALL
+Java_com_lzb_record_effect_EffectUtils_slowerPCM(JNIEnv *env, jclass jcls, jstring path_str, jstring dst_path) {
+    const char *fileUrl = env->GetStringUTFChars(path_str, NULL);
+    const char *dstFileUrl = env->GetStringUTFChars(dst_path, NULL);
+    FILE *fp = fopen(fileUrl, "rb+");
+    FILE *fp1 = fopen(dstFileUrl, "wb+");
+
+    int cnt = 0;
+
+    unsigned char *sample = (unsigned char *) malloc(4);
+    unsigned char *sample1 = (unsigned char *) malloc(2);
+
+    while (!feof(fp)) {
+        fread(sample, 1, 4, fp);
+        //L
+        fwrite(sample, 1, 2, fp1);
+        //R
+        fwrite(sample + 2, 1, 2, fp1);
+        //写入空字节
+        fwrite(sample1, 1, 1, fp1);
+        fwrite(sample1 + 1, 1, 1, fp1);
+
+    }
+    LOGI("Sample Cnt:%d\n", cnt);
+    free(sample);
+    fclose(fp);
+    fclose(fp1);
+}
+
 void stopPlaying() {
     channel->stop();
 }
