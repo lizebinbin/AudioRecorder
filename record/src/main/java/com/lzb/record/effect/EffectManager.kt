@@ -1,6 +1,7 @@
 package com.lzb.record.effect
 
 import android.content.Context
+import android.util.Log
 import org.fmod.FMOD
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -60,6 +61,11 @@ class EffectManager private constructor() {
 
     fun slowerPCM(srcPath: String, dstPath: String) {
         EffectUtils.slowerPCM(srcPath, dstPath)
+    }
+
+    fun sendRealTimePCM(data: ByteArray) {
+        Log.e("EffectManager", "sendRealTimePCM")
+        EffectUtils.slowerPCMRealTime(data)
     }
 
     inner class PlayerThread : Runnable {

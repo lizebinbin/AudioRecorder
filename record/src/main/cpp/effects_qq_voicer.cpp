@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <android/log.h>
+#include "javaRecvWork.h"
 
 #define LOGI(FORMAT, ...) __android_log_print(ANDROID_LOG_INFO,"kpioneer",FORMAT,##__VA_ARGS__);
 #define LOGE(FORMAT, ...) __android_log_print(ANDROID_LOG_ERROR,"kpioneer",FORMAT,##__VA_ARGS__);
@@ -32,6 +33,9 @@ Sound *sound;
 Channel *channel;
 DSP *dsp;
 float frequency = 0;
+CJavaRecvWork *javaRecvWork = NULL;
+char *fasterPCM = NULL;
+int isShouldCpy = 0;
 
 void stopPlaying();
 
@@ -238,6 +242,63 @@ Java_com_lzb_record_effect_EffectUtils_slowerPCM(JNIEnv *env, jclass jcls, jstri
     free(sample);
     fclose(fp);
     fclose(fp1);
+}
+
+//将PCM16LE双声道音频采样数据的声音速度加快一倍
+JNIEXPORT void JNICALL
+Java_com_lzb_record_effect_EffectUtils_slowerPCMRealTime(JNIEnv *env, jobject obj, jbyteArray srcData) {
+
+    jsize len = env->GetArrayLength(srcData);
+    char *data = (char *) env->GetByteArrayElements(srcData, 0);
+    jsize resultLen = len / 2;
+    char *resultData = new char[resultLen];
+
+    if (!fasterPCM) {
+        fasterPCM = new char[len];
+    }
+    //每四个字节一个声音单元
+    LOGE("size of data: %d resultLen == %d", len, resultLen);
+    int index = 0;
+    int resultIndex = 0;
+    int judge = 0;
+    while (index < len) {
+        //去除奇点值
+        if (judge % 2 == 0) {
+            resultData[resultIndex] = data[index];
+            resultData[resultIndex + 1] = data[index + 1];
+            resultData[resultIndex + 2] = data[index + 2];
+            resultData[resultIndex + 3] = data[index + 3];
+            resultIndex += 4;
+        }
+        index += 4;
+        judge++;
+    }
+    if (isShouldCpy == 1) {
+        memcpy(fasterPCM + resultLen, resultData, resultLen);
+        isShouldCpy = 0;
+
+
+        if (!javaRecvWork) {
+            javaRecvWork = new CJavaRecvWork();
+        }
+        jclass jc = env->FindClass(JNIREG_CLASS);
+        javaRecvWork->SetJCJB(env, jc, obj);
+
+        javaRecvWork->onSlowPCMData(resultData, resultLen);
+
+    } else {
+        memcpy(fasterPCM, resultData, resultLen);
+        isShouldCpy = 1;
+    }
+//
+//    if (!javaRecvWork) {
+//        javaRecvWork = new CJavaRecvWork();
+//    }
+//
+//    jclass jc = env->FindClass(JNIREG_CLASS);
+//    javaRecvWork->SetJCJB(env, jc, obj);
+//
+//    javaRecvWork->onSlowPCMData(resultData, resultLen);
 }
 
 void stopPlaying() {

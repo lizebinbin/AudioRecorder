@@ -40,6 +40,9 @@ JNIEXPORT void JNICALL Java_com_lzb_record_effect_EffectUtils_fasterPCM
 
 JNIEXPORT void JNICALL Java_com_lzb_record_effect_EffectUtils_slowerPCM
         (JNIEnv *, jclass, jstring, jstring);
+
+JNIEXPORT void JNICALL Java_com_lzb_record_effect_EffectUtils_slowerPCMRealTime
+        (JNIEnv *, jobject , jbyteArray);
 #ifdef __cplusplus
 }
 #endif

@@ -31,12 +31,12 @@ set_target_properties(fmodL
 
 # 查找cpp目录下的所有源文件
 # 并将名称保存到 DIR_LIB_SRC 变量
-#aux_source_directory(src/main/cpp/ DIR_LIB_SRC)
+aux_source_directory(src/main/cpp/ DIR_LIB_SRC)
 
 #设置源文件
 add_library(voice
         SHARED
-        src/main/cpp/effects_qq_voicer.cpp)
+        ${DIR_LIB_SRC})
 
 #表明头文件位置
 include_directories(src/main/cpp/inc)

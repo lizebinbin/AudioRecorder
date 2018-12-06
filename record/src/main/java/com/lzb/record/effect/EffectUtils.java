@@ -1,5 +1,9 @@
 package com.lzb.record.effect;
 
+import android.util.Log;
+import com.lzb.record.event.EventHandleData;
+import org.greenrobot.eventbus.EventBus;
+
 /**
  * Created by lzb on 2018/11/28.
  */
@@ -28,6 +32,14 @@ public class EffectUtils {
     public native static void fasterPCM(String fileUrl, String dstFileUrl);
 
     public native static void slowerPCM(String fileUrl, String dstFileUrl);
+
+    public native static void slowerPCMRealTime(byte[] data);
+
+    public static void onSlowPCMData(byte[] data) {
+        Log.e("EffectUtils", "onSlowPCMData len = " + data.length);
+        EventHandleData eventHandleData = new EventHandleData(data);
+        EventBus.getDefault().post(eventHandleData);
+    }
 
     static {
         System.loadLibrary("fmodL");

@@ -6,7 +6,10 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.text.TextUtils
 import android.util.Log
+import com.lzb.record.event.EventHandleData
 import com.lzb.record.play.AudioTracker
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -57,6 +60,12 @@ class AudioRecorder private constructor() {
 
     private var mAacEncoder: AACEncoder? = null
 
+    private var isNeedPlayRealTime = false
+
+    init {
+        EventBus.getDefault().register(this)
+    }
+
     companion object {
         const val SAVE_TYPE_AAC = 1
         const val SAVE_TYPE_WAV = 2
@@ -84,12 +93,13 @@ class AudioRecorder private constructor() {
     /**
      * 准备录音
      */
-    fun prepareRecord(fileName: String?) {
+    fun prepareRecord(fileName: String?, isNeedPlayRealTime: Boolean) {
         if (currentStatus != RecordStatus.STATE_RELEASE) {
             throw IllegalStateException("当前状态为$currentStatus")
         }
         if (recordCacheDirectory == null)
             throw IllegalStateException("call the method init() before createDefaultAudio()")
+        this.isNeedPlayRealTime = isNeedPlayRealTime
         if (TextUtils.isEmpty(fileName)) {
             this.fileName = dateFormat.format(System.currentTimeMillis()) + ".pcm"
         } else {
@@ -99,7 +109,8 @@ class AudioRecorder private constructor() {
         bufferSizeInBytes = AudioRecord.getMinBufferSize(AUDIO_SAMPLE_RETE, AUDIO_CHANNEL, AUDIO_ENCODING)
         mAudioRecord = AudioRecord(audioSource, AUDIO_SAMPLE_RETE, AUDIO_CHANNEL, AUDIO_ENCODING, bufferSizeInBytes)
         updateStatus(RecordStatus.STATE_READY)
-//        AudioTracker.getInstance().prepare()
+        if (isNeedPlayRealTime)
+            AudioTracker.getInstance().prepare()
     }
 
     fun start() {
@@ -111,7 +122,8 @@ class AudioRecorder private constructor() {
         }
         mAudioRecord.startRecording()
         updateStatus(RecordStatus.STATE_RECORDING)
-//        AudioTracker.getInstance().start()
+        if (isNeedPlayRealTime)
+            AudioTracker.getInstance().start()
         //保存到文件
         mExecutorService.execute {
             Log.e("AudioRecorder", "start record")
@@ -140,13 +152,15 @@ class AudioRecorder private constructor() {
     }
 
     fun stop() {
-        if (currentStatus == RecordStatus.STATE_RECORDING) {
+        if (currentStatus == RecordStatus.STATE_RECORDING || currentStatus == RecordStatus.STATE_PAUSE) {
             mAudioRecord.stop()
             Log.e("AudioRecorder", "stop record")
             updateStatus(RecordStatus.STATE_STOP)
             release()
+
+            if (isNeedPlayRealTime)
+                AudioTracker.getInstance().stop()
         }
-//        AudioTracker.getInstance().stop()
     }
 
     private fun release() {
@@ -155,13 +169,13 @@ class AudioRecorder private constructor() {
         //结束录音后再次调用处理方法用于关闭流、添加头等操作
         handleAudioBuffer()
 
-        pcmToWaveUtil = PcmToWaveUtil()
-        mExecutorService.execute {
-            val audioFile = File(recordCacheDirectory, fileName)
-            val desFileName = fileName?.substring(0, fileName?.indexOf(".pcm")!!) + "-release.wav"
-            val dstFile = File(recordCacheDirectory, desFileName)
-            val changeResult = pcmToWaveUtil.pcm2wav(audioFile.absolutePath, dstFile.absolutePath, false)
-        }
+//        pcmToWaveUtil = PcmToWaveUtil()
+//        mExecutorService.execute {
+//            val audioFile = File(recordCacheDirectory, fileName)
+//            val desFileName = fileName?.substring(0, fileName?.indexOf(".pcm")!!) + "-release.wav"
+//            val dstFile = File(recordCacheDirectory, desFileName)
+//            val changeResult = pcmToWaveUtil.pcm2wav(audioFile.absolutePath, dstFile.absolutePath, false)
+//        }
     }
 
     fun setSaveType(saveType: Int) {
@@ -188,11 +202,16 @@ class AudioRecorder private constructor() {
         var readSize = 0
         while (currentStatus == RecordStatus.STATE_RECORDING) {
             readSize = mAudioRecord.read(readBuffer, 0, bufferSizeInBytes)
+
+            if (callbackListener != null)
+                callbackListener!!.onRecordData(readBuffer, 3f);
+
             //处理readBuffer，
             saveBuffer2Pcm(readSize, readBuffer)
             saveBuffer2WAV(readSize, readBuffer)
             saveBuffer2AAC(readSize, readBuffer)
-//            AudioTracker.getInstance().play(readBuffer)
+            if (isNeedPlayRealTime)
+                AudioTracker.getInstance().play(readBuffer)
         }
         if (currentStatus == RecordStatus.STATE_RELEASE) {
             try {
@@ -216,6 +235,9 @@ class AudioRecorder private constructor() {
     }
 
     private fun setSaveConfig() {
+        fosWriteAAC = null
+        fosWritePCM = null
+        fosWriteWAV = null
         val saveFileName = fileName?.substring(0, fileName?.lastIndexOf(".")!!)
         when (currentSaveType) {
             SAVE_TYPE_PCM -> {
@@ -260,6 +282,14 @@ class AudioRecorder private constructor() {
     private fun saveBuffer2WAV(readSize: Int, readBuffer: ByteArray) {
         if (readSize != AudioRecord.ERROR_INVALID_OPERATION) {
             fosWriteWAV?.write(readBuffer, 0, readBuffer.size)
+        }
+    }
+
+
+    @Subscribe
+    fun onEvent(handleData: EventHandleData) {
+        if (handleData.dataArray.isNotEmpty()) {
+            AudioTracker.getInstance().play(handleData.dataArray)
         }
     }
 
